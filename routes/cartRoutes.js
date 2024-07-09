@@ -71,4 +71,62 @@ router.delete("/:productId", async (req, res) => {
   }
 });
 
+// Increase the quantity of a product in the cart
+router.put("/increase/:productId", async (req, res) => {
+  const productId = req.params.productId;
+  try {
+    let cart = await Cart.findOne();
+
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    // Increase the quantity of the product
+    const productIndex = cart.products.findIndex(
+      (p) => p.productId.toString() === productId
+    );
+    if (productIndex > -1) {
+      cart.products[productIndex].quantity += 1;
+      await cart.save();
+      res.json(cart);
+    } else {
+      res.status(404).json({ message: "Product not found in cart" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Decrease the quantity of a product in the cart
+router.put("/decrease/:productId", async (req, res) => {
+  const productId = req.params.productId;
+  try {
+    let cart = await Cart.findOne();
+
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    // Decrease the quantity of the product
+    const productIndex = cart.products.findIndex(
+      (p) => p.productId.toString() === productId
+    );
+    if (productIndex > -1) {
+      if (cart.products[productIndex].quantity > 1) {
+        cart.products[productIndex].quantity -= 1;
+        await cart.save();
+        res.json(cart);
+      } else {
+        res
+          .status(400)
+          .json({ message: "Product quantity cannot be less than 1" });
+      }
+    } else {
+      res.status(404).json({ message: "Product not found in cart" });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
